@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/soggycactus/paprika-3-mcp/internal/paprika"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,11 +20,8 @@ func TestClient(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	uuid := strings.ToUpper(uuid.NewString())
-
 	testRecipe := paprika.Recipe{
-		UID:         uuid,
-		Name:        fmt.Sprintf("Test Recipe - %s", time.Now().Format(time.RFC3339)),
+		Name:        fmt.Sprintf("Test Recipe - %d", time.Now().Unix()),
 		Notes:       "Notes",
 		Directions:  "Directions",
 		Ingredients: "Ingredients",
@@ -35,12 +30,12 @@ func TestClient(t *testing.T) {
 		SourceURL:   "URL",
 		Categories:  []string{},
 	}
-	_, err = client.CreateRecipe(ctx, testRecipe)
+	recipe, err := client.CreateRecipe(ctx, testRecipe)
 	require.NoError(t, err)
 
-	recipe, err := client.GetRecipe(ctx, testRecipe.UID)
+	recipe, err = client.GetRecipe(ctx, recipe.UID)
 	require.NoError(t, err)
-	assert.Equal(t, testRecipe.UID, recipe.UID)
+	assert.NotEmpty(t, recipe.UID)
 	assert.Equal(t, testRecipe.Name, recipe.Name)
 	assert.Equal(t, testRecipe.Notes, recipe.Notes)
 	assert.Equal(t, testRecipe.Directions, recipe.Directions)
@@ -54,10 +49,11 @@ func TestClient(t *testing.T) {
 
 	newDescription := "Updated Description"
 	recipe.Description = newDescription
+	uid := recipe.UID
 	recipe, err = client.UpdateRecipe(ctx, *recipe)
 	require.NoError(t, err)
 	assert.Equal(t, newDescription, recipe.Description)
-	assert.Equal(t, testRecipe.UID, recipe.UID)
+	assert.Equal(t, uid, recipe.UID)
 	assert.Equal(t, testRecipe.Name, recipe.Name)
 	assert.Equal(t, testRecipe.Notes, recipe.Notes)
 	assert.Equal(t, testRecipe.Directions, recipe.Directions)

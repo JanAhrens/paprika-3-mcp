@@ -15,7 +15,10 @@ import (
 	"net/http"
 	"runtime"
 	"sort"
+	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -217,6 +220,16 @@ type Recipe struct {
 	PhotoURL        string   `json:"photo_url"`
 }
 
+func (r *Recipe) generateUUID() {
+	// Generate a new UUID for the recipe
+	if r.UID == "" {
+		r.UID = strings.ToUpper(uuid.New().String())
+		return
+	}
+
+	r.UID = strings.ToUpper(r.UID)
+}
+
 func (r *Recipe) updateCreated() {
 	layout := "2006-01-02 15:04:05"
 	r.Created = time.Now().Format(layout)
@@ -347,7 +360,11 @@ func (c *Client) DeleteRecipe(ctx context.Context, recipe Recipe) (*Recipe, erro
 // saveRecipe saves a recipe to the Paprika API. If the recipe already exists, it will be updated.
 // If the recipe does not exist, it will be created.
 func (c *Client) saveRecipe(ctx context.Context, recipe Recipe) (*Recipe, error) {
+	// set the created timestamp
 	recipe.updateCreated()
+	// generate a new UUID if one doesn't exist
+	recipe.generateUUID()
+	// generate a hash of the recipe object
 	if err := recipe.updateHash(); err != nil {
 		return nil, err
 	}
