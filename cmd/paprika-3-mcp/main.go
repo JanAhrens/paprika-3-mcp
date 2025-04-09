@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"log/slog"
 	"net/url"
@@ -31,15 +32,21 @@ func extractUID(uri string) (string, error) {
 }
 
 func main() {
-	s := server.NewMCPServer("paprika-3-mcp", "1.0.0", server.WithLogging(), server.WithResourceCapabilities(false, false))
-	username := os.Getenv("PAPRIKA_USERNAME")
-	password := os.Getenv("PAPRIKA_PASSWORD")
+	username := flag.String("username", "", "Paprika 3 username (email)")
+	password := flag.String("password", "", "Paprika 3 password")
+	flag.Parse()
 
+	if *username == "" || *password == "" {
+		fmt.Fprintln(os.Stderr, "username and password are required")
+		os.Exit(1)
+	}
+
+	s := server.NewMCPServer("paprika-3-mcp", "1.0.0", server.WithLogging(), server.WithResourceCapabilities(false, false))
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	}))
 
-	paprika3, err := paprika.NewClient(username, password, logger)
+	paprika3, err := paprika.NewClient(*username, *password, logger)
 	if err != nil {
 		slog.Error("failed to create paprika client", "error", err)
 		os.Exit(1)
@@ -54,11 +61,15 @@ func main() {
 			return nil, err
 		}
 
-		resourceContents := make([]mcp.ResourceContents, len(recipes.Result))
+		resourceContents := []mcp.ResourceContents{}
 		for _, r := range recipes.Result {
 			recipe, err := paprika3.GetRecipe(ctx, r.UID)
 			if err != nil {
 				return nil, err
+			}
+
+			if recipe.InTrash {
+				continue
 			}
 
 			jsonString, err := json.Marshal(recipe)
