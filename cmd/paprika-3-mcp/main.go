@@ -15,10 +15,18 @@ import (
 	"github.com/soggycactus/paprika-3-mcp/internal/paprika"
 )
 
+var version = "dev" // set during build with -ldflags
+
 func main() {
 	username := flag.String("username", "", "Paprika 3 username (email)")
 	password := flag.String("password", "", "Paprika 3 password")
+	showVersion := flag.Bool("version", false, "Print version and exit")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("paprika-3-mcp version %s\n", version)
+		os.Exit(0)
+	}
 
 	if *username == "" || *password == "" {
 		fmt.Fprintln(os.Stderr, "username and password are required")
