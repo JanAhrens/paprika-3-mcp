@@ -88,6 +88,7 @@ func main() {
 		mcp.WithString("name", mcp.Description("The name of the recipe"), mcp.Required()),
 		mcp.WithString("ingredients", mcp.Description("The ingredients of the recipe"), mcp.Required()),
 		mcp.WithString("directions", mcp.Description("The directions for the recipe"), mcp.Required()),
+		mcp.WithString("description", mcp.Description("The description of the recipe"), mcp.DefaultString("")),
 		mcp.WithString("notes", mcp.Description("The notes for the recipe"), mcp.DefaultString("")),
 		mcp.WithString("servings", mcp.Description("The number of servings for the recipe"), mcp.DefaultString("")),
 		mcp.WithString("prep_time", mcp.Description("The prep time for the recipe"), mcp.DefaultString("")),
@@ -111,6 +112,7 @@ func main() {
 		servings := req.Params.Arguments["servings"].(string)
 		prepTime := req.Params.Arguments["prep_time"].(string)
 		cookTime := req.Params.Arguments["cook_time"].(string)
+		description := req.Params.Arguments["description"].(string)
 		notes := req.Params.Arguments["notes"].(string)
 		difficulty := req.Params.Arguments["difficulty"].(string)
 
@@ -118,6 +120,7 @@ func main() {
 			Name:        name,
 			Ingredients: ingredients,
 			Directions:  directions,
+			Description: description,
 			Servings:    servings,
 			PrepTime:    prepTime,
 			CookTime:    cookTime,
@@ -140,6 +143,7 @@ func main() {
 		mcp.WithString("name", mcp.Description("The name of the recipe"), mcp.Required()),
 		mcp.WithString("ingredients", mcp.Description("The ingredients of the recipe"), mcp.Required()),
 		mcp.WithString("directions", mcp.Description("The directions for the recipe"), mcp.Required()),
+		mcp.WithString("description", mcp.Description("The description of the recipe"), mcp.Required()),
 		mcp.WithString("notes", mcp.Description("The notes for the recipe"), mcp.Required()),
 		mcp.WithString("servings", mcp.Description("The number of servings for the recipe"), mcp.Required()),
 		mcp.WithString("prep_time", mcp.Description("The prep time for the recipe"), mcp.Required()),
@@ -163,6 +167,10 @@ func main() {
 		directions, ok := req.Params.Arguments["directions"].(string)
 		if !ok || len(directions) == 0 {
 			return nil, errors.New("directions are required")
+		}
+		description, ok := req.Params.Arguments["description"].(string)
+		if !ok || len(description) == 0 {
+			return nil, errors.New("description is required")
 		}
 		servings, ok := req.Params.Arguments["servings"].(string)
 		if !ok {
@@ -190,6 +198,7 @@ func main() {
 			Name:        name,
 			Ingredients: ingredients,
 			Directions:  directions,
+			Description: description,
 			Servings:    servings,
 			PrepTime:    prepTime,
 			CookTime:    cookTime,
