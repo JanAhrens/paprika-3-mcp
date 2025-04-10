@@ -2,6 +2,7 @@ package paprika_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -30,7 +31,7 @@ func TestClient(t *testing.T) {
 		SourceURL:   "URL",
 		Categories:  []string{},
 	}
-	recipe, err := client.CreateRecipe(ctx, testRecipe)
+	recipe, err := client.SaveRecipe(ctx, testRecipe)
 	require.NoError(t, err)
 
 	recipe, err = client.GetRecipe(ctx, recipe.UID)
@@ -50,7 +51,7 @@ func TestClient(t *testing.T) {
 	newDescription := "Updated Description"
 	recipe.Description = newDescription
 	uid := recipe.UID
-	recipe, err = client.UpdateRecipe(ctx, *recipe)
+	recipe, err = client.SaveRecipe(ctx, *recipe)
 	require.NoError(t, err)
 	assert.Equal(t, newDescription, recipe.Description)
 	assert.Equal(t, uid, recipe.UID)
@@ -76,6 +77,9 @@ func TestClient(t *testing.T) {
 		r, err := client.GetRecipe(ctx, recipe.UID)
 		require.NoError(t, err)
 
-		t.Logf("Recipe: %s", r.Name)
+		t.Logf("Recipe: %s - %s", r.Name, r.Created)
+		if _, err := json.Marshal(r); err != nil {
+			t.Logf("Failed to marshal recipe: %s", err)
+		}
 	}
 }

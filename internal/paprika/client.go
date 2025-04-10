@@ -341,25 +341,16 @@ func (c *Client) GetRecipe(ctx context.Context, uid string) (*Recipe, error) {
 	return &recipeResp.Result, nil
 }
 
-func (c *Client) CreateRecipe(ctx context.Context, recipe Recipe) (*Recipe, error) {
-	return c.saveRecipe(ctx, recipe)
-
-}
-
-func (c *Client) UpdateRecipe(ctx context.Context, recipe Recipe) (*Recipe, error) {
-	return c.saveRecipe(ctx, recipe)
-}
-
 func (c *Client) DeleteRecipe(ctx context.Context, recipe Recipe) (*Recipe, error) {
 	// Set the recipe to be in the trash
 	// TODO: reverse-engineer full deletions; currently a user must go in-app to empty their trash and fully delete something
 	recipe.InTrash = true
-	return c.saveRecipe(ctx, recipe)
+	return c.SaveRecipe(ctx, recipe)
 }
 
-// saveRecipe saves a recipe to the Paprika API. If the recipe already exists, it will be updated.
+// SaveRecipe saves a recipe to the Paprika API. If the recipe already exists, it will be updated.
 // If the recipe does not exist, it will be created.
-func (c *Client) saveRecipe(ctx context.Context, recipe Recipe) (*Recipe, error) {
+func (c *Client) SaveRecipe(ctx context.Context, recipe Recipe) (*Recipe, error) {
 	// set the created timestamp
 	recipe.updateCreated()
 	// generate a new UUID if one doesn't exist
