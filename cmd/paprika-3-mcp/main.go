@@ -177,7 +177,7 @@ func main() {
 			return nil, errors.New("directions are required")
 		}
 		description, ok := req.Params.Arguments["description"].(string)
-		if !ok || len(description) == 0 {
+		if !ok {
 			return nil, errors.New("description is required")
 		}
 		servings, ok := req.Params.Arguments["servings"].(string)
