@@ -185,7 +185,6 @@ func (c *Client) ListRecipes(ctx context.Context) (*RecipeList, error) {
 		return nil, err
 	}
 
-	c.logger.Info("got recipes", "count", len(recipeList.Result))
 	return &recipeList, nil
 }
 

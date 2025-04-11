@@ -17,6 +17,13 @@ import (
 
 var version = "dev" // set during build with -ldflags
 
+type RecipeSummary struct {
+	UID         string `json:"uid"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	URI         string `json:"uri"`
+}
+
 func main() {
 	username := flag.String("username", "", "Paprika 3 username (email)")
 	password := flag.String("password", "", "Paprika 3 password")
@@ -33,7 +40,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	s := server.NewMCPServer("paprika-3-mcp", "1.0.0", server.WithLogging(), server.WithResourceCapabilities(false, false))
+	s := server.NewMCPServer("paprika-3-mcp", "1.0.0", server.WithLogging(), server.WithResourceCapabilities(true, true))
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	}))
@@ -87,8 +94,6 @@ func main() {
 		s.AddResource(mcp.NewResource(fmt.Sprintf("paprika://recipes/%s", r.UID), recipe.Name, mcp.WithResourceDescription(resourceDescription(recipe)), mcp.WithMIMEType("application/json")), func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 			return []mcp.ResourceContents{resourceContents}, nil
 		})
-
-		slog.Info("Added resource", "name", recipe.Name, "uid", r.UID)
 	}
 
 	createRecipeTool := mcp.NewTool("create_paprika_recipe",
@@ -220,6 +225,49 @@ func main() {
 		return mcp.NewToolResultResource(recipe.Name, mcp.TextResourceContents{
 			URI:      fmt.Sprintf("paprika://recipes/%s", recipe.UID),
 			MIMEType: "application/json",
+		}), nil
+	})
+
+	getAllRecipesTool := mcp.NewTool("list_recipe_summaries",
+		mcp.WithDescription("Get a summary list of all available recipes. Use the recipe resource endpoints to fetch full details for specific recipes."),
+	)
+
+	s.AddTool(getAllRecipesTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		recipes, err := paprika3.ListRecipes(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list recipes: %w", err)
+		}
+
+		// Create summarized version of recipes
+		summaries := make([]RecipeSummary, 0, len(recipes.Result))
+		for _, r := range recipes.Result {
+			recipe, err := paprika3.GetRecipe(ctx, r.UID)
+			if err != nil {
+				slog.Error("failed to get recipe", "error", err)
+				continue
+			}
+
+			if recipe.InTrash {
+				continue
+			}
+
+			summaries = append(summaries, RecipeSummary{
+				UID:         recipe.UID,
+				Name:        recipe.Name,
+				Description: recipe.Description,
+				URI:         fmt.Sprintf("paprika://recipes/%s", recipe.UID),
+			})
+		}
+
+		jsonString, err := json.Marshal(summaries)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal recipe summaries: %w", err)
+		}
+
+		return mcp.NewToolResultResource("recipe_summaries", mcp.TextResourceContents{
+			URI:      "paprika://recipes/summaries",
+			MIMEType: "application/json",
+			Text:     string(jsonString),
 		}), nil
 	})
 
