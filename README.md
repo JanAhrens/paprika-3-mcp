@@ -4,14 +4,35 @@ Paprika is a tool designed to help manage recipes, plan meals, and organize groc
 
 > **Note:** Some features may not yet be available.
 
+## Prerequisites
+
+- Go 1.x or higher
+- `jq` command-line tool (for debugging)
+
+## Building
+
+```bash
+go build ./cmd/paprika-3-mcp
+```
+
+## Running
+
+```bash
+export PAPRIKA_USERNAME="your_email"
+export PAPRIKA_PASSWORD="your_password"
+./paprika-3-mcp
+```
+
+The server will start on port 8080 by default.
+
 ## Debugging
 
 Follow these steps to send JSON-RPC requests to the server using the CLI:
 
 1. Set your credentials:
     ```bash
-    export MY_USERNAME="FILLME"
-    export MY_PASSWORD="FILLME"
+    export PAPRIKA_USERNAME="your_email"
+    export PAPRIKA_PASSWORD="your_password"
     ```
 
 2. Navigate to the command directory:
@@ -27,7 +48,7 @@ Follow these steps to send JSON-RPC requests to the server using the CLI:
         "params": {},
         "id": 1
     }' | jq -c \
-       | go run . --username $MY_USERNAME --password $MY_PASSWORD \
+       | go run . \
        | jq .
     ```
 
@@ -41,7 +62,7 @@ Follow these steps to send JSON-RPC requests to the server using the CLI:
         },
         "id": 1
     }' | jq -c \
-       | go run . --username $MY_USERNAME --password $MY_PASSWORD \
+       | go run . \
        | jq '.result.content[1].resource.text | fromjson'
     ```
 
@@ -55,6 +76,6 @@ Follow these steps to send JSON-RPC requests to the server using the CLI:
         },
         "id": 1
     }' | jq -c \
-       | go run . --username $MY_USERNAME --password $MY_PASSWORD \
+       | go run . \
        | jq '.result.contents[0].text | fromjson'
     ```

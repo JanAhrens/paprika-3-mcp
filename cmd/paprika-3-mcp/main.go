@@ -25,8 +25,8 @@ type RecipeSummary struct {
 }
 
 func main() {
-	username := flag.String("username", "", "Paprika 3 username (email)")
-	password := flag.String("password", "", "Paprika 3 password")
+	username := flag.String("username", os.Getenv("PAPRIKA_USERNAME"), "Paprika 3 username (email)")
+	password := flag.String("password", os.Getenv("PAPRIKA_PASSWORD"), "Paprika 3 password")
 	showVersion := flag.Bool("version", false, "Print version and exit")
 	flag.Parse()
 
@@ -36,7 +36,7 @@ func main() {
 	}
 
 	if *username == "" || *password == "" {
-		fmt.Fprintln(os.Stderr, "username and password are required")
+		fmt.Fprintln(os.Stderr, "Paprika credentials required. Set PAPRIKA_USERNAME and PAPRIKA_PASSWORD environment variables or provide --username and --password flags")
 		os.Exit(1)
 	}
 
