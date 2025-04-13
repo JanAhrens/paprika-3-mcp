@@ -35,15 +35,23 @@ See anything missing? Open an issue on this repo to request a feature!
 
 You can download a prebuilt binary from the [Releases](https://github.com/soggycactus/paprika-3-mcp/releases) page.
 
-### 📦 Download & Install
+### 🍎 macOS (via Homebrew)
+
+If you're on macOS, the easiest way to install is with [Homebrew](https://brew.sh/):
+
+```bash
+brew tap soggycactus/tap
+brew install paprika-3-mcp
+```
+
+### 🐧 Linux / 🪟 Windows
 
 1. Go to the [latest release](https://github.com/soggycactus/paprika-3-mcp/releases).
 2. Download the appropriate archive for your operating system and architecture:
-   - `paprika-3-mcp_<version>_darwin_amd64.zip` for macOS
    - `paprika-3-mcp_<version>_linux_amd64.zip` for Linux
    - `paprika-3-mcp_<version>_windows_amd64.zip` for Windows
 3. Extract the zip archive:
-   - **macOS / Linux**:
+   - **Linux**:
      ```bash
      unzip paprika-3-mcp_<version>_<os>_<arch>.zip
      ```
@@ -51,7 +59,7 @@ You can download a prebuilt binary from the [Releases](https://github.com/soggyc
      - Right-click the `.zip` file and select **Extract All**, or use a tool like 7-Zip.
 4. Move the binary to a directory in your system's `$PATH`:
 
-   - macOS / Linux:
+   - Linux:
 
      ```bash
      sudo mv paprika-3-mcp /usr/local/bin/
