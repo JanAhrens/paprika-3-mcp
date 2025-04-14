@@ -271,6 +271,44 @@ func main() {
 		}), nil
 	})
 
+	getRecipeDetailsTool := mcp.NewTool("get_recipe_details",
+		mcp.WithDescription("Get detailed information for a specific recipe by its URI"),
+		mcp.WithString("uri", mcp.Description("The URI of the recipe (e.g., paprika://recipes/<uid>)"), mcp.Required()),
+	)
+
+	s.AddTool(getRecipeDetailsTool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		uri, ok := req.Params.Arguments["uri"].(string)
+		if !ok || len(uri) == 0 {
+			return nil, errors.New("uri is required")
+		}
+
+		// Extract UID from URI (format: paprika://recipes/<uid>)
+		uid := uri[len("paprika://recipes/"):]
+		if len(uid) == 0 {
+			return nil, errors.New("invalid recipe URI format")
+		}
+
+		recipe, err := paprika3.GetRecipe(ctx, uid)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get recipe details: %w", err)
+		}
+
+		if recipe.InTrash {
+			return nil, errors.New("recipe not found or in trash")
+		}
+
+		jsonString, err := json.Marshal(recipe)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal recipe details: %w", err)
+		}
+
+		return mcp.NewToolResultResource(recipe.Name, mcp.TextResourceContents{
+			URI:      uri,
+			MIMEType: "application/json",
+			Text:     string(jsonString),
+		}), nil
+	})
+
 	if err := server.ServeStdio(s); err != nil {
 		slog.Error("Server error", "error", err)
 	}

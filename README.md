@@ -31,7 +31,7 @@ To use this server as part of an MCP client, such as Claude Desktop, you need to
 {
     "mcpServers": {
         "paprika": {
-            "command": "/Users/yourusername/path-to-download-directory/paprika-3-mcp/paprika-3-mcp",
+            "command": "/Users/yourusername/path-to-download-directory/paprika-3-mcp/bin/paprika-3-mcp",
             "env": {
                 "PAPRIKA_USERNAME": "your_email",
                 "PAPRIKA_PASSWORD": "your_password"
