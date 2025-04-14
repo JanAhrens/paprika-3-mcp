@@ -21,11 +21,6 @@ import (
 	"github.com/google/uuid"
 )
 
-var (
-	// userAgent is required by the Paprika API
-	userAgent = "paprika-3-mcp/1.0 (golang; " + runtime.Version() + ")"
-)
-
 // roundTripper is a wrapper around http.RoundTripper
 // that adds the specified headers to each request
 type roundTripper struct {
@@ -43,7 +38,11 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	return r.transport.RoundTrip(req)
 }
 
-func NewClient(username, password string, logger *slog.Logger) (*Client, error) {
+func userAgent(version string) string {
+	return fmt.Sprintf("paprika-3-mcp/%s (golang; %s)", version, runtime.Version())
+}
+
+func NewClient(username, password, version string, logger *slog.Logger) (*Client, error) {
 	// Create the http client & login to retrieve an authentication token
 	t := &http.Transport{
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -74,7 +73,7 @@ func NewClient(username, password string, logger *slog.Logger) (*Client, error) 
 			"Accept":        "*/*",
 			"Authorization": fmt.Sprintf("Bearer %s", token),
 			"Connection":    "keep-alive",
-			"User-Agent":    userAgent,
+			"User-Agent":    userAgent(version),
 		},
 	}
 
@@ -185,6 +184,7 @@ func (c *Client) ListRecipes(ctx context.Context) (*RecipeList, error) {
 		return nil, err
 	}
 
+	c.logger.Info("found recipes", "count", len(recipeList.Result))
 	return &recipeList, nil
 }
 
@@ -217,6 +217,69 @@ type Recipe struct {
 	OnGroceryList   bool     `json:"on_grocery_list"`
 	Created         string   `json:"created"`
 	PhotoURL        string   `json:"photo_url"`
+}
+
+func (r *Recipe) ResourceDescription() string {
+	if len(r.Description) == 0 {
+		return fmt.Sprintf("A recipe for %s", r.Name)
+	}
+
+	return fmt.Sprintf("A recipe for %s: %s", r.Name, r.Description)
+}
+
+func (r *Recipe) ToMarkdown() string {
+	var sb strings.Builder
+
+	sb.WriteString(fmt.Sprintf("# %s\n\n", r.Name))
+
+	if r.Description != "" {
+		sb.WriteString(fmt.Sprintf("_%s_\n\n", r.Description))
+	}
+
+	if r.Servings != "" || r.PrepTime != "" || r.CookTime != "" || r.Difficulty != "" {
+		sb.WriteString("## Details\n")
+		if r.Servings != "" {
+			sb.WriteString(fmt.Sprintf("- **Servings:** %s\n", r.Servings))
+		}
+		if r.PrepTime != "" {
+			sb.WriteString(fmt.Sprintf("- **Prep Time:** %s\n", r.PrepTime))
+		}
+		if r.CookTime != "" {
+			sb.WriteString(fmt.Sprintf("- **Cook Time:** %s\n", r.CookTime))
+		}
+		if r.Difficulty != "" {
+			sb.WriteString(fmt.Sprintf("- **Difficulty:** %s\n", r.Difficulty))
+		}
+		sb.WriteString("\n")
+	}
+
+	if r.Ingredients != "" {
+		sb.WriteString("## Ingredients\n")
+		for _, line := range strings.Split(strings.TrimSpace(r.Ingredients), "\n") {
+			if line != "" {
+				sb.WriteString(fmt.Sprintf("- %s\n", line))
+			}
+		}
+		sb.WriteString("\n")
+	}
+
+	if r.Directions != "" {
+		sb.WriteString("## Directions\n")
+		lines := strings.Split(strings.TrimSpace(r.Directions), "\n")
+		for i, line := range lines {
+			if line != "" {
+				sb.WriteString(fmt.Sprintf("%d. %s\n", i+1, line))
+			}
+		}
+		sb.WriteString("\n")
+	}
+
+	if r.Notes != "" {
+		sb.WriteString("## Notes\n")
+		sb.WriteString(r.Notes + "\n\n")
+	}
+
+	return sb.String()
 }
 
 func (r *Recipe) generateUUID() {

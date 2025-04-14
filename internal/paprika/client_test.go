@@ -16,7 +16,7 @@ import (
 func TestClient(t *testing.T) {
 	username := os.Getenv("PAPRIKA_USERNAME")
 	password := os.Getenv("PAPRIKA_PASSWORD")
-	client, err := paprika.NewClient(username, password, nil)
+	client, err := paprika.NewClient(username, password, "dev", nil)
 	require.NoError(t, err)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()

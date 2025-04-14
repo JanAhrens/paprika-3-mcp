@@ -1,12 +1,10 @@
-.PHONY: all build test clean debug-tools debug-recipes run
+.PHONY: build install test clean run debug-tools debug-recipes
 
-# Default target
-all: build
+build: 
+	go build -o bin ./cmd/...
 
-# Build the application
-build:
-	@mkdir -p bin
-	go build -o bin/paprika-3-mcp ./cmd/paprika-3-mcp
+install:
+	go install ./cmd/paprika-3-mcp
 
 # Run all tests
 test:

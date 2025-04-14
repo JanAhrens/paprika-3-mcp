@@ -1,55 +1,115 @@
-# Paprika 3 MCP Server
+# paprika-3-mcp
 
-Paprika is a tool designed to help manage recipes, plan meals, and organize grocery lists. The Paprika 3 MCP Server provides a connection to the Paprika sync API, allowing interaction with your recipe collection.
+A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) server that exposes your **Paprika 3** recipes as LLM-readable resources — and lets an LLM like Claude create or update recipes in your Paprika app.
 
-> **Note:** Some features may not yet be available.
+### 🖼️ Example: Claude using the Paprika MCP server
 
-## Prerequisites
+<p align="center">
+  <img src="docs/example.png" alt="MCP server running with Claude" />
+</p>
 
-- Go 1.x or higher
-- `jq` command-line tool (for debugging)
+## 🚀 Features
 
-## Building
+See anything missing? Open an issue on this repo to request a feature!
 
-You can build the project using Make:
+#### 📄 **Resources**
+
+- Recipes ✅
+- Recipe Photos 🚧
+
+#### 🛠 **Tools**
+
+- `create_paprika_recipe`  
+  Allows Claude to save a new recipe to your Paprika app
+- `update_paprika_recipe`  
+  Allows Claude to modify an existing recipe
+
+## ⚙️ Prerequisites
+
+- ✅ A Mac, Linux, or Windows system
+- ✅ [Paprika 3](https://www.paprikaapp.com/) installed with cloud sync enabled
+- ✅ Your Paprika 3 **username and password**
+- ✅ Claude or any LLM client with **MCP tool support** enabled
+- ✅ `jq` command-line tool (for debugging)
+
+## 🛠 Installation
+
+You can download a prebuilt binary from the [Releases](https://github.com/soggycactus/paprika-3-mcp/releases) page.
+
+### 🍎 macOS (via Homebrew)
+
+If you're on macOS, the easiest way to install is with [Homebrew](https://brew.sh/):
 
 ```bash
-make build
+brew tap soggycactus/tap
+brew install paprika-3-mcp
 ```
 
-Or manually with Go:
+### 🐧 Linux / 🪟 Windows
+
+1. Go to the [latest release](https://github.com/soggycactus/paprika-3-mcp/releases).
+2. Download the appropriate archive for your operating system and architecture:
+   - `paprika-3-mcp_<version>_linux_amd64.zip` for Linux
+   - `paprika-3-mcp_<version>_windows_amd64.zip` for Windows
+3. Extract the zip archive:
+   - **Linux**:
+     ```bash
+     unzip paprika-3-mcp_<version>_<os>_<arch>.zip
+     ```
+   - **Windows**:
+     - Right-click the `.zip` file and select **Extract All**, or use a tool like 7-Zip.
+4. Move the binary to a directory in your system's `$PATH`:
+
+   - Linux:
+
+     ```bash
+     sudo mv paprika-3-mcp /usr/local/bin/
+     ```
+
+   - Windows:
+     - Move `paprika-3-mcp.exe` to any folder in your `PATH` (e.g., `%USERPROFILE%\bin`)
+
+### ✅ Test the installation
+
+You can verify the server is installed by checking:
 
 ```bash
-go build ./cmd/paprika-3-mcp
+paprika-3-mcp --version
 ```
 
-## Running as Part of an MCP Client
+You should see:
 
-To use this server as part of an MCP client, such as Claude Desktop, you need to compile it first (refer to the [Building](#building) section). After compilation, configure the client to use your Paprika username and password. Below is an example configuration for Claude Desktop:
+```bash
+paprika-3-mcp version v0.1.0
+```
+
+## 🤖 Setting up Claude
+
+If you haven't setup MCP before, [first read more about how to install Claude Desktop client & configure an MCP server.](https://modelcontextprotocol.io/quickstart/user)
+
+To add `paprika-3-mcp` to Claude, all you need to do is create another entry in the `mcpServers` section of your `claude_desktop_config.json` file:
 
 ```json
 {
-    "mcpServers": {
-        "paprika": {
-            "command": "/Users/yourusername/path-to-download-directory/paprika-3-mcp/bin/paprika-3-mcp",
-            "env": {
-                "PAPRIKA_USERNAME": "your_email",
-                "PAPRIKA_PASSWORD": "your_password"
-            }
-        }
+  "mcpServers": {
+    "paprika-3": {
+      "command": "paprika-3-mcp",
+      "args": [
+        "--username",
+        "<your paprika 3 username (usually email)>",
+        "--password",
+        "<your paprika 3 password>"
+      ]
     }
+  }
 }
 ```
 
-### Steps to Configure:
+Restart Claude and you should see the MCP server tools after clicking on the hammerhead icon:
 
-1. Replace `/Users/yourusername/path-to-download-directory/` with the actual path where the `paprika-3-mcp` binary is located.
-2. Update `your_email` and `your_password` with your Paprika account credentials.
-3. Save the configuration file in the appropriate location for your MCP client.
+![MCP server running with Claude](docs/install.png)
 
-Once configured, the MCP client will use the Paprika 3 MCP Server to interact with your recipe collection.
-
-## Development
+## 🔧 Development & Debugging
 
 The project includes several Make targets to help with development:
 
@@ -58,9 +118,9 @@ The project includes several Make targets to help with development:
 - `make debug-tools` - List available JSON-RPC tools
 - `make debug-recipes` - List recipe summaries
 
-## Debugging
+### Manual JSON-RPC Debugging
 
-Follow these steps to send JSON-RPC requests to the server using the CLI:
+You can manually test the server's JSON-RPC endpoints using these steps:
 
 1. Set your credentials:
     ```bash
@@ -96,7 +156,7 @@ Follow these steps to send JSON-RPC requests to the server using the CLI:
        | jq '.result.content[1].resource.text | fromjson'
     ```
 
-5. Send a request to get a resource
+5. Send a request to get a resource:
     ```bash
     echo '{
         "jsonrpc": "2.0",
@@ -108,3 +168,24 @@ Follow these steps to send JSON-RPC requests to the server using the CLI:
     }' | jq -c | go run . \
        | jq '.result.contents[0].text | fromjson'
     ```
+
+## 📄 License
+
+This project is open source under the [MIT License](./LICENSE) © 2025 [Lucas Stephens](https://github.com/soggycactus).
+
+---
+
+#### 🗂 Miscellaneous
+
+##### 📄 Where can I see the server logs?
+
+The MCP server writes structured logs using Go's `slog` with rotation via `lumberjack`. Log files are automatically created based on your operating system:
+
+| Operating System | Log File Path                             |
+| ---------------- | ----------------------------------------- |
+| macOS            | `~/Library/Logs/paprika-3-mcp/server.log` |
+| Linux            | `/var/log/paprika-3-mcp/server.log`       |
+| Windows          | `%APPDATA%\paprika-3-mcp\server.log`      |
+| Other / Unknown  | `/tmp/paprika-3-mcp/server.log`           |
+
+> 💡 Logs are rotated automatically at 100MB, with only 5 backup files kept. Logs are also wiped after 10 days.
